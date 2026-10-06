@@ -1,0 +1,779 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f5f5f7">
+<title>ETO Assistant — 6S60ME-C10.5-GI v2</title>
+<style>
+:root{--bg:#07101d;--panel:#0e1a2b;--panel2:#13243a;--text:#eef5ff;--muted:#91a4bc;--accent:#56b4ff;--warn:#ffc857;--danger:#ff6b6b;--ok:#55d187;--border:#20334d}
+*{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,#06101c,#0a1422);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+header{position:sticky;top:0;z-index:10;background:rgba(7,16,29,.94);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:14px 16px}
+h1{font-size:20px;margin:0 0 4px} .sub{font-size:12px;color:var(--muted)}
+.wrap{max-width:1100px;margin:auto;padding:14px} .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:14px;box-shadow:0 8px 30px rgba(0,0,0,.18)}
+.controls{display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:10px}
+input,select,button,textarea{font:inherit} input,select,textarea{width:100%;background:#0a1626;color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px}
+button{border:1px solid var(--border);background:var(--panel2);color:var(--text);border-radius:10px;padding:10px 12px;cursor:pointer}
+button.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px} .filters button{font-size:12px;padding:7px 9px}
+.engine{position:relative;min-height:430px;background:radial-gradient(circle at 50% 45%,#163252 0,#0a1727 55%,#08121f 100%);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.engine-title{position:absolute;top:12px;left:14px;font-weight:700} .engine-sub{position:absolute;top:34px;left:14px;color:var(--muted);font-size:11px}
+.block{position:absolute;left:10%;right:10%;top:24%;bottom:18%;border:2px solid #39516e;border-radius:14px;background:#0b1b2e}
+.cyls{position:absolute;left:8%;right:8%;top:16%;display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.cyl{height:110px;border:1px solid #3c5875;border-radius:9px;background:#12283f;display:flex;align-items:center;justify-content:center;font-weight:700;position:relative}
+.cyl span{position:absolute;bottom:7px;font-size:10px;color:var(--muted);font-weight:400}
+.points{position:absolute;left:4%;right:4%;bottom:5%;display:flex;justify-content:space-around;gap:8px;flex-wrap:wrap}
+.point{width:13px;height:13px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px rgba(86,180,255,.55);cursor:pointer}
+.point.hot{background:var(--warn);box-shadow:0 0 12px rgba(255,200,87,.5)}
+.point.gas{background:#d79cff}
+.legend{display:flex;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:11px;margin-top:8px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:4px}
+.dot.warn{background:var(--warn)} .dot.gas{background:#d79cff}
+.sensor-list{display:grid;gap:8px;max-height:650px;overflow:auto}
+.sensor{border:1px solid var(--border);border-radius:12px;padding:11px;background:#0b1727;cursor:pointer}
+.sensor:hover{border-color:#416687} .tag{font-weight:800;color:var(--accent);font-size:13px} .sensor-name{margin-top:2px;font-size:14px} .meta{color:var(--muted);font-size:11px;margin-top:5px;line-height:1.4}
+.badge{display:inline-block;font-size:10px;padding:3px 6px;border-radius:6px;background:#172a42;color:#b8cae0;margin-right:5px;margin-top:5px}
+.badge.warn{background:#3a2d12;color:#ffd66e} .badge.gas{background:#2f1b3c;color:#e4baff}
+h2{font-size:15px;margin:0 0 10px} h3{font-size:14px;margin:14px 0 6px} p{line-height:1.45;font-size:13px;color:#d4deeb}
+.small{font-size:11px;color:var(--muted)} .source{font-size:11px;color:var(--muted);border-top:1px solid var(--border);margin-top:12px;padding-top:10px}
+.note{background:#101f31;border-left:3px solid var(--warn);padding:9px 10px;border-radius:7px;font-size:12px;line-height:1.45;color:#dce6f2}
+textarea{min-height:110px;resize:vertical} .save{margin-top:7px}
+@media(max-width:800px){.grid{grid-template-columns:1fr} .engine{min-height:360px} .cyl{height:85px;font-size:12px}}
+
+/* Light marine instrumentation theme */
+:root{--bg:#f3f6fa;--panel:#ffffff;--panel2:#edf3f8;--text:#172b43;--muted:#62758c;--accent:#1479bd;--warn:#c77b0a;--danger:#c84545;--ok:#16835e;--border:#d9e3ed}
+body{background:linear-gradient(180deg,#f7f9fc 0,#eef3f8 100%);color:var(--text)}
+header{background:rgba(255,255,255,.94);border-bottom:1px solid var(--border);box-shadow:0 3px 14px rgba(20,48,78,.05)}
+.wrap{max-width:1180px;padding:20px}.grid{gap:16px}
+.card{background:#fff;border-color:var(--border);box-shadow:0 8px 24px rgba(24,54,86,.06);padding:18px}
+input,select,textarea{background:#f8fafc;color:var(--text);border-color:var(--border)}input::placeholder,textarea::placeholder{color:#8a9aab}
+button{background:#f1f6fa;color:#24415f;border-color:var(--border);transition:background .16s,border-color .16s,transform .16s,box-shadow .16s}button:hover{background:#e7f1f8;border-color:#a9c6dc}button.active{background:#e3f2fc;border-color:var(--accent);color:#075c94;box-shadow:0 0 0 1px rgba(20,121,189,.16) inset}
+.engine{min-height:470px;background:radial-gradient(ellipse at 50% 48%,#f8fcff 0,#edf5fa 65%,#e7eff6 100%);border-color:#cfdeea;box-shadow:inset 0 1px 0 #fff}
+.engine-title{color:#1c3955}.engine-sub{color:#6b8197}
+.block{border:2px solid #b6c8d8;background:linear-gradient(180deg,#dce8f1,#cddbe7);box-shadow:inset 0 8px 20px rgba(255,255,255,.65),0 8px 16px rgba(39,72,103,.08)}
+.cyls{left:7%;right:7%;top:15%;gap:7px;z-index:1}
+.cyl{height:132px;min-width:0;padding:10px 3px 23px;border:1px solid #aebfd0;border-radius:12px;background:linear-gradient(180deg,#fff 0,#eef4f8 52%,#dce7ef 100%);color:#29445e;box-shadow:0 5px 12px rgba(35,67,96,.10),inset 0 1px 0 #fff;cursor:pointer;transition:transform .18s,box-shadow .18s,border-color .18s,background .18s}
+.cyl:before{content:"";position:absolute;top:12px;width:54%;height:35px;border-radius:7px 7px 4px 4px;background:linear-gradient(180deg,#eaf1f6,#cbd9e5);border:1px solid #bdccd9;box-shadow:inset 0 2px 5px rgba(40,70,98,.09)}.cyl:after{content:"";position:absolute;top:51px;width:44%;height:27px;border-radius:5px;background:linear-gradient(180deg,#8bb5d3,#5a8fb5);border:1px solid #5180a2;box-shadow:0 2px 5px rgba(45,95,132,.22)}
+.cyl:hover{transform:translateY(-3px);border-color:#65a6d0;box-shadow:0 9px 18px rgba(29,104,157,.17)}.cyl.selected{background:linear-gradient(180deg,#f5fbff,#d8edf9);border:2px solid var(--accent);box-shadow:0 0 0 3px rgba(20,121,189,.12),0 8px 18px rgba(29,104,157,.16)}.cyl.selected:after{background:linear-gradient(180deg,#f3b96b,#dc8734);border-color:#ca7427}
+.cyl span{bottom:8px;left:2px;right:2px;color:#687e92;font-size:9px;line-height:1.15;text-align:center}
+.points{bottom:6%;z-index:2}.point{background:#268bc7;box-shadow:0 0 0 4px rgba(38,139,199,.12),0 2px 5px rgba(20,80,125,.2);transition:transform .16s}.point:hover{transform:scale(1.25)}.point.hot{background:#dc9a28;box-shadow:0 0 0 4px rgba(220,154,40,.14)}.point.gas{background:#9465bb;box-shadow:0 0 0 4px rgba(148,101,187,.13)}
+.dot{background:#268bc7}.dot.warn{background:#dc9a28}.dot.gas{background:#9465bb}
+.sensor{background:#fbfdff;border-color:#dbe5ee;transition:transform .15s,box-shadow .15s,border-color .15s}.sensor:hover{border-color:#9dc5df;box-shadow:0 5px 14px rgba(35,78,112,.08);transform:translateY(-1px)}
+.tag{color:#1479bd}.meta,.small,.sub,.legend{color:#687d92}.badge{background:#edf3f8;color:#49637b}.badge.warn{background:#fff4dc;color:#94600b}.badge.gas{background:#f3eafa;color:#70429a}
+h1{color:#193651}h2{color:#1c3955}h3{color:#29455e}p{color:#41566b}.source{border-color:var(--border);color:#687d92}.note{background:#fff8e9;border-left-color:#d89b2d;color:#6c5427}
+#detail{line-height:1.5}#detail p{margin-bottom:8px}#list{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:800px){.wrap{padding:12px}.card{padding:14px}.engine{min-height:390px}.cyls{left:4%;right:4%;gap:4px;top:18%}.cyl{height:108px;font-size:11px}.cyl:before{top:10px;height:27px}.cyl:after{top:43px;height:24px}.cyl span{font-size:8px}#list{grid-template-columns:1fr}}
+@media(max-width:430px){.engine{min-height:345px}.cyls{top:22%;left:3%;right:3%;gap:3px}.cyl{height:91px;padding-left:0;padding-right:0;font-size:10px}.cyl:before{top:9px;height:22px}.cyl:after{top:37px;height:21px}.cyl span{font-size:7px;bottom:5px}.engine-sub{max-width:70%}}
+
+
+/* Refined, Apple-inspired interface */
+:root{--text:#1d1d1f;--muted:#6e6e73;--accent:#0071e3;--border:#d2d2d7;--panel:#fff;--panel2:#f5f5f7}
+body{background:#f5f5f7;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",system-ui,sans-serif;letter-spacing:-.012em}
+header{position:sticky;background:rgba(250,250,252,.86);border-bottom:1px solid rgba(0,0,0,.08);box-shadow:none;padding:16px max(22px,calc((100vw - 1180px)/2));backdrop-filter:saturate(180%) blur(20px)}
+header h1{font-size:20px;letter-spacing:-.025em;font-weight:650;color:#1d1d1f}.sub{font-size:12px;color:#6e6e73}
+.wrap{max-width:1180px;padding:34px 22px 60px}.card{border:0;border-radius:24px;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.035);padding:26px}
+h2{font-size:20px;letter-spacing:-.025em;color:#1d1d1f;font-weight:650;margin:0 0 18px}h3{font-size:15px;color:#1d1d1f;font-weight:620}
+p{color:#515154}button{border:0;border-radius:980px;background:#f5f5f7;color:#1d1d1f;transition:background .16s,transform .16s,box-shadow .16s}button:hover{background:#e9e9eb;border-color:transparent}button.active{background:#e5f1ff;color:#0066cc;border:0;box-shadow:none}
+input,select,textarea{border-radius:12px;background:#f5f5f7;border:1px solid transparent;color:#1d1d1f;padding:12px 14px}input:focus,select:focus,textarea:focus{outline:2px solid rgba(0,113,227,.35);background:#fff}
+.note{border:0;border-radius:16px;background:#fff8e6;color:#6b5424;padding:14px 16px}
+.engine{min-height:450px;border:0;border-radius:20px;background:linear-gradient(145deg,#f7f9fb,#e9eef3);box-shadow:inset 0 1px 0 #fff}
+.engine-title{font-size:15px;top:18px;left:20px;color:#1d1d1f}.engine-sub{top:41px;left:20px;color:#6e6e73;font-size:12px}
+.block{left:8%;right:8%;top:25%;bottom:18%;border:1px solid #c8d0d8;border-radius:22px;background:linear-gradient(180deg,#dfe5eb,#cdd5de);box-shadow:inset 0 14px 24px rgba(255,255,255,.55),0 12px 24px rgba(44,60,78,.08)}
+.cyls{left:7%;right:7%;top:18%;gap:8px;z-index:1}
+.cyl{height:126px;border:1px solid #d5dbe1;border-radius:15px;background:linear-gradient(180deg,#fff 0,#f2f5f7 58%,#e2e8ed 100%);color:#293847;box-shadow:0 5px 14px rgba(31,47,63,.09);font-size:12px;padding:10px 2px 22px}
+.cyl:before{top:12px;width:54%;height:32px;border:1px solid #d0d8df;border-radius:8px;background:linear-gradient(180deg,#f8fafb,#dfe6ec);box-shadow:none}.cyl:after{top:50px;width:42%;height:25px;border:1px solid #7da8c6;border-radius:6px;background:linear-gradient(180deg,#b6d5eb,#7aa9ca);box-shadow:none}
+.cyl:hover{transform:translateY(-4px);border-color:#9cc9ee;box-shadow:0 12px 20px rgba(0,91,171,.14)}.cyl.selected{border:2px solid #0071e3;background:linear-gradient(180deg,#fff,#eaf4ff);box-shadow:0 0 0 4px rgba(0,113,227,.1),0 10px 18px rgba(0,91,171,.12)}.cyl.selected:after{background:linear-gradient(180deg,#f5cb8c,#dc9146);border-color:#d8893a}
+.cyl span{bottom:7px;color:#70777e;font-size:9px;letter-spacing:0}
+.points{bottom:6%}.point{width:11px;height:11px;box-shadow:0 0 0 5px rgba(0,113,227,.10);background:#1683e6}.point.hot{background:#dc9a28;box-shadow:0 0 0 5px rgba(220,154,40,.13)}.point.gas{background:#9c69c8;box-shadow:0 0 0 5px rgba(156,105,200,.12)}
+.legend,.small,.meta,.source{color:#6e6e73}.sensor{background:#fff;border:1px solid #e7e7e9;border-radius:16px;box-shadow:none}.sensor:hover{border-color:#b8d7f1;box-shadow:0 5px 14px rgba(0,0,0,.05)}.tag{color:#0071e3}.badge{border-radius:980px;background:#f2f2f4;color:#515154;padding:4px 9px}.badge.warn{background:#fff4dc;color:#90600d}.badge.gas{background:#f3eafa;color:#70429a}
+#list{gap:10px}.source{border-color:#d2d2d7}.dot{background:#1683e6}.dot.warn{background:#dc9a28}.dot.gas{background:#9c69c8}
+/* Cylinder sensor browser */
+.modal-backdrop{position:fixed;inset:0;z-index:50;background:rgba(20,20,24,.34);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:24px}
+.modal-backdrop[hidden]{display:none}
+.sensor-modal{width:min(100%,1000px);max-height:min(88vh,900px);overflow:auto;background:rgba(255,255,255,.96);border:1px solid rgba(255,255,255,.7);border-radius:26px;box-shadow:0 28px 90px rgba(0,0,0,.22);padding:26px}
+.modal-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:22px}.modal-title{font-size:30px;line-height:1.1;letter-spacing:-.04em;margin:0 0 8px}.modal-subtitle{margin:0;color:#6e6e73;font-size:14px}.modal-close{width:38px;height:38px;padding:0;font-size:22px;line-height:1;flex:none;background:#f1f1f3;color:#5d5d62}
+.group-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.group-card{display:block;width:100%;min-height:124px;text-align:left;padding:16px;border-radius:18px;background:#f5f5f7;border:1px solid transparent;color:#1d1d1f}
+.group-card:hover{background:#eeeef0;transform:translateY(-1px)}.group-card.active{background:#edf6ff;border:1px solid #b7d8f5;box-shadow:0 0 0 2px rgba(0,113,227,.08)}
+.group-name{display:block;font-size:15px;font-weight:650;letter-spacing:-.02em}.group-en{display:block;margin-top:3px;color:#747479;font-size:11px;letter-spacing:0}.group-count{display:block;margin-top:12px;font-size:12px;color:#6e6e73;line-height:1.4}
+.group-content{margin-top:16px;padding:18px;border:1px solid #e5e5e7;border-radius:18px;background:#fff;min-height:130px}.group-content h3{margin:0 0 12px;font-size:17px}.group-sensor-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.group-sensor{width:100%;text-align:left;border-radius:12px;background:#f5f5f7;padding:12px}.group-sensor strong{display:block;color:#0071e3;font-size:12px}.group-sensor span{display:block;margin-top:4px;font-size:13px;line-height:1.35}.group-sensor.active{background:#e8f3ff;box-shadow:inset 0 0 0 1px #9bc8ef}
+.sensor-modal-detail{margin-top:12px;padding:14px 16px;border-radius:14px;background:#f5f5f7;line-height:1.5}.sensor-modal-detail:empty{display:none}.sensor-modal-detail p{margin:6px 0;font-size:13px}.empty-group{font-size:13px;color:#6e6e73;line-height:1.5;padding:10px 0}.modal-footer{margin-top:16px;color:#77777c;font-size:11px;line-height:1.5}
+@media(max-width:800px){header{padding:13px 16px}.wrap{padding:20px 14px 40px}.card{padding:18px;border-radius:20px}.group-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sensor-modal{padding:20px;border-radius:22px}.modal-title{font-size:25px}}
+@media(max-width:520px){.engine{min-height:345px}.cyls{top:23%;left:3%;right:3%;gap:4px}.cyl{height:92px;padding:6px 0 20px;font-size:10px;border-radius:10px}.cyl:before{top:8px;height:23px}.cyl:after{top:36px;height:20px}.cyl span{font-size:7px;bottom:5px}.group-grid{grid-template-columns:1fr 1fr;gap:8px}.group-card{min-height:112px;padding:12px;border-radius:15px}.group-count{margin-top:8px}.group-sensor-list{grid-template-columns:1fr}.modal-backdrop{padding:10px}.sensor-modal{max-height:94vh;padding:16px}.modal-title{font-size:22px}}
+
+</style>
+</head>
+<body>
+<header>
+  <h1>⚓ ETO Assistant — MAN B&W 6S60ME-C10.5-GI</h1>
+  <div class="sub">v2 • Generic/public-source knowledge base • vessel-specific manual can be added later</div>
+</header>
+<div class="wrap">
+  <div class="note"><b>Important:</b> This version is a generic reference based on public MAN documentation. TAGs, physical locations, alarm/slowdown/shutdown limits and installed options must be verified against your vessel's approved drawings and manuals. MAN states that the Project Guide is preliminary and is not a substitute for project-specific documentation.</div>
+  <div style="height:12px"></div>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Interactive engine map</h2>
+      <div class="engine">
+        <div class="engine-title">6S60ME-C10.5-GI</div>
+        <div class="engine-sub">6 cylinders • ME-GI • select a cylinder or system point</div>
+        <div class="block"></div>
+        <div class="cyls">
+          <button type="button" class="cyl" data-cylinder="1" aria-label="Cylinder 1: show details and exhaust temperature sensor">CYL 1<span>exhaust temp / injection</span></button>
+          <button type="button" class="cyl" data-cylinder="2" aria-label="Cylinder 2: show details and exhaust temperature sensor">CYL 2<span>exhaust temp / injection</span></button>
+          <button type="button" class="cyl" data-cylinder="3" aria-label="Cylinder 3: show details and exhaust temperature sensor">CYL 3<span>exhaust temp / injection</span></button>
+          <button type="button" class="cyl" data-cylinder="4" aria-label="Cylinder 4: show details and exhaust temperature sensor">CYL 4<span>exhaust temp / injection</span></button>
+          <button type="button" class="cyl" data-cylinder="5" aria-label="Cylinder 5: show details and exhaust temperature sensor">CYL 5<span>exhaust temp / injection</span></button>
+          <button type="button" class="cyl" data-cylinder="6" aria-label="Cylinder 6: show details and exhaust temperature sensor">CYL 6<span>exhaust temp / injection</span></button>
+        </div>
+        <div class="points">
+          <div class="point hot" data-system="Lube oil" title="Lube oil"></div>
+          <div class="point" data-system="Cooling water" title="Cooling water"></div>
+          <div class="point" data-system="Compressed air" title="Compressed air"></div>
+          <div class="point" data-system="Scavenge air" title="Scavenge air"></div>
+          <div class="point" data-system="Exhaust gas" title="Exhaust gas"></div>
+          <div class="point gas" data-system="ME-GI gas" title="ME-GI gas"></div>
+          <div class="point" data-system="Fuel oil" title="Fuel oil"></div>
+        </div>
+      </div>
+      <div class="legend">
+        <span><i class="dot"></i>general system</span><span><i class="dot warn"></i>lube oil / protection</span><span><i class="dot gas"></i>ME-GI</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Sensor details</h2>
+      <div id="detail" class="small">Select a sensor from the list.</div>
+      <h3>Onboard note</h3>
+      <textarea id="note" placeholder="Write your own vessel-specific note here…"></textarea>
+      <button class="save" onclick="saveNote()">Save note locally</button>
+      <div id="saved" class="small"></div>
+    </section>
+  </div>
+
+  <div style="height:14px"></div>
+  <section class="card">
+    <h2>Sensor database</h2>
+    <div class="controls">
+      <input id="search" placeholder="Search TAG, sensor name, location, system…">
+      <select id="system"><option>All systems</option></select>
+    </div>
+    <div class="filters" id="filters"></div>
+    <div class="sensor-list" id="list"></div>
+  </section>
+
+  <div style="height:14px"></div>
+  <section class="card">
+    <h2>⚠️ Troubleshooting quick start</h2>
+    <div class="grid" style="grid-template-columns:repeat(2,1fr)">
+      <div>
+        <h3>Low lube-oil pressure</h3>
+        <p>Check local gauge → transmitter value → filter differential pressure → pump status → suction conditions → oil temperature/viscosity. Compare local and remote readings before changing a sensor.</p>
+      </div>
+      <div>
+        <h3>High jacket-water temperature</h3>
+        <p>Compare inlet/outlet temperature → check cooling-water pressure/flow → cooler condition → control valve → load and cylinder temperature deviations.</p>
+      </div>
+      <div>
+        <h3>High exhaust temperature on one cylinder</h3>
+        <p>Compare all six cylinder TC values → verify sensor wiring/terminal condition → compare with local/independent measurement → investigate injection, exhaust valve and combustion condition.</p>
+      </div>
+      <div>
+        <h3>ME-GI gas pressure abnormal</h3>
+        <p>Check gas-system pressure transmitters and valve feedback → confirm permissives/interlocks → compare ECS indication with local instrumentation → follow the approved gas-system procedure.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="source">
+    <b>Source basis:</b> Everllence/MAN B&W S60ME-C10.5-GI Project Guide, Edition 1.0, October 2025, especially the local instruments / remote sensors table. Public-source data are used as a starting knowledge base; project-specific documentation takes priority.
+    <br><br>
+    Official references: man-es.com marine tools & downloads and the S60ME-C10.5-GI Project Guide.
+  </div>
+</div>
+
+
+<div class="modal-backdrop" id="sensorModal" hidden>
+  <section class="sensor-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalSubtitle">
+    <div class="modal-header">
+      <div><h2 class="modal-title" id="modalTitle">Cylinder 1</h2><p class="modal-subtitle" id="modalSubtitle">Choose a system to see its sensors and tags.</p></div>
+      <button type="button" class="modal-close" id="modalClose" aria-label="Close">×</button>
+    </div>
+    <div class="group-grid" id="groupGrid"></div>
+    <div class="group-content" id="groupContent" aria-live="polite"></div>
+    <div class="modal-footer">Generic reference data. Confirm sensor tags, locations and limits against the approved vessel drawings and manuals.</div>
+  </section>
+</div>
+
+<script>
+const DATA = [
+  {
+    "tag": "PT 8001",
+    "type": "PT",
+    "system": "Fuel oil",
+    "name": "Fuel oil inlet pressure",
+    "location": "Fuel oil inlet to engine",
+    "critical": "Monitoring / remote indication",
+    "notes": "Pressure transmitter. Verify exact alarm limits in vessel-specific drawings."
+  },
+  {
+    "tag": "TE 8005",
+    "type": "TE",
+    "system": "Fuel oil",
+    "name": "Fuel oil inlet temperature",
+    "location": "Fuel oil inlet to engine",
+    "critical": "Monitoring",
+    "notes": "Temperature transmitter; exact tag/configuration can vary by project."
+  },
+  {
+    "tag": "LS 8006",
+    "type": "LS",
+    "system": "Fuel oil",
+    "name": "Fuel oil leakage detection",
+    "location": "Fuel oil system",
+    "critical": "Alarm / monitoring",
+    "notes": "Use vessel-specific drawing to confirm physical sensor arrangement."
+  },
+  {
+    "tag": "PT 8103",
+    "type": "PT",
+    "system": "Lube oil",
+    "name": "Lube oil inlet pressure to turbocharger",
+    "location": "Turbocharger lube oil inlet",
+    "critical": "Monitoring",
+    "notes": ""
+  },
+  {
+    "tag": "PT 8108",
+    "type": "PT",
+    "system": "Lube oil",
+    "name": "Lube oil inlet pressure to main engine",
+    "location": "Main engine lube oil inlet",
+    "critical": "Monitoring",
+    "notes": ""
+  },
+  {
+    "tag": "PS/PT 8109",
+    "type": "PS/PT",
+    "system": "Lube oil",
+    "name": "Lube oil pressure at main engine / thrust bearing",
+    "location": "Main engine / thrust bearing area",
+    "critical": "Alarm / shutdown-related depending configuration",
+    "notes": "Project-specific function must be verified."
+  },
+  {
+    "tag": "PDS 8140",
+    "type": "PDS",
+    "system": "Lube oil",
+    "name": "Lube oil differential pressure across cross filter",
+    "location": "Lube oil cross filter",
+    "critical": "Alarm / monitoring",
+    "notes": ""
+  },
+  {
+    "tag": "TE 8106",
+    "type": "TE",
+    "system": "Lube oil",
+    "name": "Thrust bearing segment temperature",
+    "location": "Thrust bearing",
+    "critical": "Monitoring / protection",
+    "notes": ""
+  },
+  {
+    "tag": "TE/TS 8107",
+    "type": "TE/TS",
+    "system": "Lube oil",
+    "name": "Thrust bearing temperature",
+    "location": "Thrust bearing",
+    "critical": "Monitoring / protection",
+    "notes": ""
+  },
+  {
+    "tag": "TE 8112",
+    "type": "TE",
+    "system": "Lube oil",
+    "name": "Lube oil inlet temperature",
+    "location": "Main engine lube oil inlet",
+    "critical": "Monitoring",
+    "notes": ""
+  },
+  {
+    "tag": "TE 8113",
+    "type": "TE",
+    "system": "Lube oil",
+    "name": "Piston cooling oil outlet temperature",
+    "location": "Piston cooling oil outlet",
+    "critical": "Monitoring",
+    "notes": ""
+  },
+  {
+    "tag": "FS 8114",
+    "type": "FS",
+    "system": "Lube oil",
+    "name": "Piston cooling oil outlet flow",
+    "location": "Piston cooling oil circuit",
+    "critical": "Monitoring / protection",
+    "notes": ""
+  },
+  {
+    "tag": "XC 8126",
+    "type": "XC",
+    "system": "Lube oil",
+    "name": "Bearing wear indication",
+    "location": "Engine bearing system",
+    "critical": "Monitoring",
+    "notes": "Exact sensor arrangement is project-specific."
+  },
+  {
+    "tag": "XS 8127",
+    "type": "XS",
+    "system": "Lube oil",
+    "name": "Bearing wear detector failure",
+    "location": "Bearing wear monitoring system",
+    "critical": "Alarm",
+    "notes": ""
+  },
+  {
+    "tag": "PT 8401",
+    "type": "PT",
+    "system": "Cooling water",
+    "name": "Jacket cooling water inlet pressure",
+    "location": "Engine jacket cooling water inlet",
+    "critical": "Monitoring",
+    "notes": ""
+  },
+  {
+    "tag": "PS/PT 8402",
+    "type": "PS/PT",
+    "system": "Cooling water",
+    "name": "Jacket cooling water inlet pressure switch/transmitter",
+    "location": "Jacket cooling water inlet",
+    "critical": "Alarm / protection",
+    "notes": "Project guide lists this as an option for certain classification requirements."
+  },
+  {
+    "tag": "PDT 8403",
+    "type": "PDT",
+    "system": "Cooling water",
+    "name": "Jacket cooling water differential pressure across engine",
+    "location": "Across engine",
+    "critical": "Monitoring",
+    "notes": "Alternative arrangement may use PT 8401 + PT 8413."
+  },
+  {
+    "tag": "PDT 8404",
+    "type": "PDT",
+    "system": "Cooling water",
+    "name": "Jacket cooling water differential pressure across cylinder liners",
+    "location": "Cylinder liner circuit",
+    "critical": "Monitoring",
+    "notes": "Not applicable for all configurations."
+  },
+  {
+    "tag": "PDT 8405",
+    "type": "PDT",
+    "system": "Cooling water",
+    "name": "Jacket cooling water differential pressure across cylinder covers and exhaust valves",
+    "location": "Cylinder cover / exhaust valve circuit",
+    "critical": "Monitoring",
+    "notes": "Not applicable for all configurations."
+  },
+  {
+    "tag": "PT 8413",
+    "type": "PT",
+    "system": "Cooling water",
+    "name": "Jacket cooling water outlet pressure",
+    "location": "Common outlet pipe",
+    "critical": "Monitoring",
+    "notes": ""
+  },
+  {
+    "tag": "TE 8407",
+    "type": "TE",
+    "system": "Cooling water",
+    "name": "Jacket cooling water inlet temperature",
+    "location": "Engine inlet",
+    "critical": "Monitoring / protection",
+    "notes": ""
+  },
+  {
+    "tag": "TE 8408",
+    "type": "TE",
+    "system": "Cooling water",
+    "name": "Jacket cooling water outlet temperature",
+    "location": "Engine outlet",
+    "critical": "Monitoring / protection",
+    "notes": ""
+  },
+  {
+    "tag": "PT 8421",
+    "type": "PT",
+    "system": "Cooling water",
+    "name": "Cooling water inlet pressure to air cooler",
+    "location": "Air cooler inlet",
+    "critical": "Monitoring",
+    "notes": "Low-temperature cooling water / central cooling circuit."
+  },
+  {
+    "tag": "TE 8422",
+    "type": "TE",
+    "system": "Cooling water",
+    "name": "Air cooler cooling-water inlet temperature",
+    "location": "Air cooler",
+    "critical": "Monitoring",
+    "notes": ""
+  },
+  {
+    "tag": "TE 8423",
+    "type": "TE",
+    "system": "Cooling water",
+    "name": "Air cooler cooling-water outlet temperature",
+    "location": "Air cooler",
+    "critical": "Monitoring",
+    "notes": ""
+  },
+  {
+    "tag": "PT 8501",
+    "type": "PT",
+    "system": "Compressed air",
+    "name": "Starting air inlet pressure to main starting valve",
+    "location": "Main starting valve inlet",
+    "critical": "Monitoring / protection",
+    "notes": ""
+  },
+  {
+    "tag": "PT 8503",
+    "type": "PT",
+    "system": "Compressed air",
+    "name": "Control air inlet pressure",
+    "location": "Control air inlet",
+    "critical": "Monitoring / protection",
+    "notes": ""
+  },
+  {
+    "tag": "PT 8505",
+    "type": "PT",
+    "system": "Compressed air",
+    "name": "Air inlet pressure to exhaust-valve air cylinder",
+    "location": "Exhaust valve air cylinder circuit",
+    "critical": "Monitoring",
+    "notes": "Project guide identifies this as ME-B specific; confirm applicability before using."
+  },
+  {
+    "tag": "PT 8601",
+    "type": "PT",
+    "system": "Scavenge air",
+    "name": "Scavenge air receiver pressure",
+    "location": "Scavenge air receiver",
+    "critical": "Monitoring / protection",
+    "notes": ""
+  },
+  {
+    "tag": "PDT 8606",
+    "type": "PDT",
+    "system": "Scavenge air",
+    "name": "Pressure drop across scavenge-air cooler",
+    "location": "Scavenge-air cooler",
+    "critical": "Monitoring",
+    "notes": ""
+  },
+  {
+    "tag": "TE 8605",
+    "type": "TE",
+    "system": "Scavenge air",
+    "name": "Scavenge air temperature before cooler",
+    "location": "Before scavenge-air cooler",
+    "critical": "Monitoring",
+    "notes": ""
+  },
+  {
+    "tag": "TE 8608",
+    "type": "TE",
+    "system": "Scavenge air",
+    "name": "Scavenge air temperature after cooler",
+    "location": "After scavenge-air cooler",
+    "critical": "Monitoring",
+    "notes": ""
+  },
+  {
+    "tag": "TE 8609",
+    "type": "TE",
+    "system": "Scavenge air",
+    "name": "Scavenge air receiver temperature",
+    "location": "Scavenge air receiver",
+    "critical": "Monitoring",
+    "notes": ""
+  },
+  {
+    "tag": "TE 8610",
+    "type": "TE",
+    "system": "Scavenge air",
+    "name": "Scavenge air box fire temperature",
+    "location": "Scavenge air box",
+    "critical": "Fire / protection",
+    "notes": "Exact detection arrangement must be checked in vessel documentation."
+  },
+  {
+    "tag": "LS 8611",
+    "type": "LS",
+    "system": "Scavenge air",
+    "name": "Water mist catcher level",
+    "location": "Scavenge air system",
+    "critical": "Alarm / monitoring",
+    "notes": ""
+  },
+  {
+    "tag": "TC 8701",
+    "type": "TC",
+    "system": "Exhaust gas",
+    "name": "Exhaust gas temperature before turbocharger",
+    "location": "Exhaust gas receiver / turbocharger inlet",
+    "critical": "Monitoring",
+    "notes": ""
+  },
+  {
+    "tag": "TC 8702-1…6",
+    "type": "TC",
+    "system": "Exhaust gas",
+    "name": "Exhaust gas temperature per cylinder",
+    "location": "Cylinder exhaust outlets",
+    "critical": "Monitoring / deviation detection",
+    "notes": "Six-cylinder version: one channel per cylinder."
+  },
+  {
+    "tag": "TC 8704",
+    "type": "TC",
+    "system": "Exhaust gas",
+    "name": "Exhaust gas receiver temperature",
+    "location": "Exhaust gas receiver",
+    "critical": "Monitoring",
+    "notes": ""
+  },
+  {
+    "tag": "TC 8707",
+    "type": "TC",
+    "system": "Exhaust gas",
+    "name": "Exhaust gas temperature after turbocharger",
+    "location": "Turbocharger exhaust outlet",
+    "critical": "Monitoring",
+    "notes": ""
+  },
+  {
+    "tag": "ZT 8801",
+    "type": "ZT",
+    "system": "Miscellaneous",
+    "name": "Turbocharger speed",
+    "location": "Turbocharger",
+    "critical": "Overspeed / monitoring",
+    "notes": ""
+  },
+  {
+    "tag": "WT 8812",
+    "type": "WT",
+    "system": "Miscellaneous",
+    "name": "Axial vibration",
+    "location": "Engine / shafting monitoring",
+    "critical": "Monitoring",
+    "notes": "Exact installation depends on project."
+  },
+  {
+    "tag": "XS 8813",
+    "type": "XS",
+    "system": "Miscellaneous",
+    "name": "Oil mist detection",
+    "location": "Engine crankcase / OMD system",
+    "critical": "Alarm / shutdown",
+    "notes": ""
+  },
+  {
+    "tag": "XS 8814",
+    "type": "XS",
+    "system": "Miscellaneous",
+    "name": "Oil mist detector failure",
+    "location": "OMD system",
+    "critical": "Alarm",
+    "notes": ""
+  },
+  {
+    "tag": "XC 8816",
+    "type": "XC",
+    "system": "Miscellaneous",
+    "name": "Shaftline earthing device",
+    "location": "Shaftline / earthing system",
+    "critical": "Monitoring",
+    "notes": "Useful for onboard ETO diagnostics; confirm actual sensor/input on vessel."
+  },
+  {
+    "tag": "XS/XT 8817",
+    "type": "XS/XT",
+    "system": "Miscellaneous",
+    "name": "Turbocharger overspeed",
+    "location": "Turbocharger",
+    "critical": "Protection",
+    "notes": "Exact sensor type depends on configuration."
+  },
+  {
+    "tag": "PT 6006",
+    "type": "PT",
+    "system": "ME-GI gas",
+    "name": "Gas system pressure transmitter",
+    "location": "ME-GI gas injection system",
+    "critical": "Monitoring / gas safety",
+    "notes": "ME-GI section; exact service and limit are project-specific."
+  },
+  {
+    "tag": "PT 6017",
+    "type": "PT",
+    "system": "ME-GI gas",
+    "name": "Gas system pressure transmitter",
+    "location": "ME-GI gas system",
+    "critical": "Monitoring / gas safety",
+    "notes": "Verify exact service against project drawing."
+  },
+  {
+    "tag": "TT 6029",
+    "type": "TT",
+    "system": "ME-GI gas",
+    "name": "Gas system temperature transmitter",
+    "location": "ME-GI gas system",
+    "critical": "Monitoring / gas safety",
+    "notes": "Verify exact service against project drawing."
+  },
+  {
+    "tag": "PT 6321",
+    "type": "PT",
+    "system": "ME-GI gas",
+    "name": "Gas/control pressure transmitter",
+    "location": "ME-GI gas/control system",
+    "critical": "Monitoring",
+    "notes": "Generic public-source entry; vessel drawings take priority."
+  },
+  {
+    "tag": "ZS 6010",
+    "type": "ZS",
+    "system": "ME-GI gas",
+    "name": "Gas system valve position/status",
+    "location": "ME-GI gas system",
+    "critical": "Interlock / monitoring",
+    "notes": "Exact valve and feedback must be confirmed in project drawings."
+  }
+];
+let current = null;
+const systems = [...new Set(DATA.map(x=>x.system))].sort();
+
+const sysSel = document.getElementById('system');
+systems.forEach(s=>{const o=document.createElement('option');o.textContent=s;sysSel.appendChild(o)});
+
+const filters = document.getElementById('filters');
+['All',...systems].forEach(s=>{
+  const b=document.createElement('button'); b.textContent=s; b.onclick=()=>{sysSel.value=s==='All'?'All systems':s; render(); [...filters.children].forEach(x=>x.classList.remove('active')); b.classList.add('active')}; filters.appendChild(b);
+});
+filters.children[0].classList.add('active');
+
+function render(){
+  const q=document.getElementById('search').value.toLowerCase().trim();
+  const sys=sysSel.value;
+  const rows=DATA.filter(x=>(sys==='All systems'||x.system===sys) && (!q || JSON.stringify(x).toLowerCase().includes(q)));
+  const list=document.getElementById('list');
+  list.innerHTML='';
+  rows.forEach(x=>{
+    const d=document.createElement('div'); d.className='sensor';
+    const gas=x.system==='ME-GI gas';
+    d.innerHTML=`<div class="tag">${x.tag}</div><div class="sensor-name">${x.name}</div>
+      <span class="badge">${x.system}</span><span class="badge">${x.type}</span>
+      ${gas?'<span class="badge gas">ME-GI</span>':''}
+      <div class="meta">${x.location} • ${x.critical}</div>`;
+    d.onclick=()=>show(x);
+    list.appendChild(d);
+  });
+  if(!rows.length) list.innerHTML='<div class="small">No matching sensors.</div>';
+}
+function show(x){
+  current=x;
+  document.getElementById('detail').innerHTML=`<div class="tag">${x.tag}</div>
+  <h3>${x.name}</h3>
+  <p><b>Type:</b> ${x.type}<br><b>System:</b> ${x.system}<br><b>Typical location:</b> ${x.location}<br><b>Function:</b> ${x.critical}</p>
+  <p>${x.notes||''}</p>`;
+  document.getElementById('note').value=localStorage.getItem('eto_note_'+x.tag)||'';
+  document.getElementById('saved').textContent='';
+}
+function saveNote(){
+  if(!current) return;
+  localStorage.setItem('eto_note_'+current.tag,document.getElementById('note').value);
+  document.getElementById('saved').textContent='Saved locally on this device.';
+}
+document.getElementById('search').addEventListener('input',render);
+sysSel.addEventListener('change',()=>{[...filters.children].forEach(x=>x.classList.remove('active'));render()});
+document.querySelectorAll('.point').forEach(p=>p.addEventListener('click',()=>{sysSel.value=p.dataset.system;render();window.scrollTo({top:document.getElementById('list').getBoundingClientRect().top+window.scrollY-80,behavior:'smooth'})}));
+
+// Cylinder selection opens a system-by-system sensor browser.
+const SENSOR_GROUPS=[
+  {key:'cooling',ru:'Охлаждающая вода',en:'Cooling water',systems:['Cooling water']},
+  {key:'exhaust',ru:'Выхлопные газы',en:'Exhaust gas',systems:['Exhaust gas']},
+  {key:'oil',ru:'Масло',en:'Lubricating oil',systems:['Lube oil']},
+  {key:'fuel',ru:'Топливо',en:'Fuel oil',systems:['Fuel oil']},
+  {key:'hydraulic',ru:'Гидравлическая система',en:'Hydraulic system',systems:[]},
+  {key:'gas',ru:'Газовая система',en:'ME-GI gas',systems:['ME-GI gas']},
+  {key:'air',ru:'Пусковой и управляющий воздух',en:'Starting & control air',systems:['Compressed air']},
+  {key:'scavenge',ru:'Продувочный воздух',en:'Scavenge air',systems:['Scavenge air']},
+  {key:'other',ru:'Прочие системы',en:'Other',systems:['Miscellaneous']}
+];
+const modal=document.getElementById('sensorModal');
+const groupGrid=document.getElementById('groupGrid');
+const groupContent=document.getElementById('groupContent');
+let activeCylinder=null, activeGroup=null, activeSensor=null, previousFocus=null;
+function sensorsForGroup(group,cylinder){
+  const entries=DATA.filter(x=>group.systems.includes(x.system));
+  if(group.key==='exhaust'){
+    const item=entries.find(x=>x.tag==='TC 8702-1…6');
+    if(item)return [{...item,tag:`TC 8702-${cylinder}`,name:`Exhaust gas temperature — cylinder ${cylinder}`,location:`Cylinder ${cylinder} exhaust outlet`,notes:`Individual channel within the TC 8702-1…6 group. Confirm the installed tag and limits against approved vessel documentation.`},...entries.filter(x=>x!==item)];
+  }
+  return entries;
+}
+function openCylinder(n){
+  activeCylinder=n;activeGroup='exhaust';activeSensor=null;previousFocus=document.activeElement;
+  document.querySelectorAll('.cyl').forEach(x=>x.classList.toggle('selected',x.dataset.cylinder===String(n)));
+  document.getElementById('modalTitle').textContent=`Cylinder ${n}`;
+  document.getElementById('modalSubtitle').textContent='Выберите группу — покажу привязанные датчики и теги.';
+  drawGroups();modal.hidden=false;document.body.style.overflow='hidden';document.getElementById('modalClose').focus();
+}
+function drawGroups(){
+  groupGrid.innerHTML='';
+  SENSOR_GROUPS.forEach(group=>{
+    const items=sensorsForGroup(group,activeCylinder);
+    const button=document.createElement('button');button.type='button';button.className='group-card'+(activeGroup===group.key?' active':'');
+    button.setAttribute('aria-pressed',activeGroup===group.key?'true':'false');
+    button.innerHTML=`<span class="group-name">${group.ru}</span><span class="group-en">${group.en}</span><span class="group-count">${items.length?`${items.length} sensor${items.length===1?'':'s'} in current reference`:'Нет подтверждённых записей в текущей базе'}</span>`;
+    button.addEventListener('click',()=>{activeGroup=group.key;activeSensor=null;drawGroups();drawGroupContent()});groupGrid.appendChild(button);
+  });
+  drawGroupContent();
+}
+function drawGroupContent(){
+  const group=SENSOR_GROUPS.find(x=>x.key===activeGroup);if(!group)return;
+  const items=sensorsForGroup(group,activeCylinder);
+  groupContent.innerHTML=`<h3>${group.ru} <span class="small">· ${group.en}</span></h3>`;
+  if(!items.length){groupContent.insertAdjacentHTML('beforeend',`<div class="empty-group">В опубликованной справочной базе пока нет датчиков этой группы. Добавим их после проверки инструкции и судовых схем.</div>`);return;}
+  const list=document.createElement('div');list.className='group-sensor-list';
+  items.forEach(sensor=>{
+    const item=document.createElement('button');item.type='button';item.className='group-sensor'+(activeSensor?.tag===sensor.tag?' active':'');item.innerHTML=`<strong>${sensor.tag}</strong><span>${sensor.name}</span>`;
+    item.addEventListener('click',()=>{activeSensor=sensor;showModalSensor(sensor);drawGroupContent()});list.appendChild(item);
+  });groupContent.appendChild(list);
+  if(activeSensor)showModalSensor(activeSensor);
+}
+function showModalSensor(sensor){
+  let detail=document.getElementById('modalSensorDetail');
+  if(!detail){detail=document.createElement('div');detail.id='modalSensorDetail';detail.className='sensor-modal-detail';groupContent.appendChild(detail)}
+  detail.innerHTML=`<b>${sensor.tag} — ${sensor.name}</b><p><b>Location:</b> ${sensor.location}</p><p><b>Function:</b> ${sensor.critical}</p>${sensor.notes?`<p>${sensor.notes}</p>`:''}`;
+}
+function closeCylinderModal(){modal.hidden=true;document.body.style.overflow='';if(previousFocus)previousFocus.focus()}
+document.querySelectorAll('.cyl').forEach(button=>button.addEventListener('click',()=>openCylinder(button.dataset.cylinder)));
+document.getElementById('modalClose').addEventListener('click',closeCylinderModal);
+modal.addEventListener('click',event=>{if(event.target===modal)closeCylinderModal()});
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!modal.hidden)closeCylinderModal()});
+
+render();
+</script>
+</body>
+</html>
